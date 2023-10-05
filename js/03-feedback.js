@@ -1,38 +1,40 @@
+import throttle from 'lodash.throttle';
 
-const form = document.querySelector('.feedback-form');
+function saveState() {
+  const email = document.querySelector('input[name="email"]').value;
+  const message = document.querySelector('textarea[name="message"]').value;
 
-form.addEventListener('input', _.throttle(function(event) {
-  const formData = new FormData(form);
-  const feedbackState = {
-    email: formData.get('email'),
-    message: formData.get('message')
-  };
-  localStorage.setItem('feedback-form-state', JSON.stringify(feedbackState));
-}, 500));
+  const state = { email, message };
 
-document.addEventListener('DOMContentLoaded', function() {
-    const feedbackState = JSON.parse(localStorage.getItem('feedback-form-state'));
-    const emailInput = form.querySelector('input[name="email"]');
-    const messageInput = form.querySelector('textarea[name="message"]');
-  
-    if (feedbackState) {
-      emailInput.value = feedbackState.email || '';
-      messageInput.value = feedbackState.message || '';
-    }
-  });
-  
-  form.addEventListener('submit', function(event) {
-    event.preventDefault();
-  
-    const feedbackState = JSON.parse(localStorage.getItem('feedback-form-state'));
-    console.log('Form submitted with feedback:', feedbackState);
-  
-    localStorage.removeItem('feedback-form-state');
-  
-    const emailInput = form.querySelector('input[name="email"]');
-    const messageInput = form.querySelector('textarea[name="message"]');
-  
-    emailInput.value = '';
-    messageInput.value = '';
-  });
-  import _ from 'lodash';
+  localStorage.setItem('feedback-form-state', JSON.stringify(state));
+}
+
+function loadState() {
+  const stateString = localStorage.getItem('feedback-form-state');
+  if (stateString) {
+    const state = JSON.parse(stateString);
+    document.querySelector('input[name="email"]').value = state.email;
+    document.querySelector('textarea[name="message"]').value = state.message;
+  }
+}
+
+function handleSubmit(event) {
+  event.preventDefault();
+  const email = document.querySelector('input[name="email"]').value;
+  const message = document.querySelector('textarea[name="message"]').value;
+
+  console.log(`Email: ${email}, Message: ${message}`);
+
+  localStorage.removeItem('feedback-form-state');
+  document.querySelector('input[name="email"]').value = '';
+  document.querySelector('textarea[name="message"]').value = '';
+}
+
+
+document.querySelectorAll('input, textarea').forEach(element => {
+  element.addEventListener('input', throttle(saveState, 500));
+});
+
+document.querySelector('.feedback-form').addEventListener('submit', handleSubmit);
+
+window.addEventListener('load', loadState);
