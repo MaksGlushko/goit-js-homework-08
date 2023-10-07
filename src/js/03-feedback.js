@@ -1,40 +1,39 @@
-import throttle from 'lodash.throttle';
+const throttle = require('lodash.throttle');
 
-function saveState() {
-  const email = document.querySelector('input[name="email"]').value;
-  const message = document.querySelector('textarea[name="message"]').value;
+const savedData = JSON.parse(localStorage.getItem("feedback-form-state")) || {};
 
-  const state = { email, message };
+function clearStorage() {
+    savedData.message = '';
+    savedData.email = '';
 
-  localStorage.setItem('feedback-form-state', JSON.stringify(state));
+    localStorage.removeItem('feedback-form-state');
+
 }
 
-function loadState() {
-  const stateString = localStorage.getItem('feedback-form-state');
-  if (stateString) {
-    const state = JSON.parse(stateString);
-    document.querySelector('input[name="email"]').value = state.email;
-    document.querySelector('textarea[name="message"]').value = state.message;
-  }
-}
+const emailInput = document.querySelector('input[name="email"]');
+const messageInput = document.querySelector('textarea[name="message"]');
+const formSubmit = document.querySelector('.feedback-form');
 
-function handleSubmit(event) {
-  event.preventDefault();
-  const email = document.querySelector('input[name="email"]').value;
-  const message = document.querySelector('textarea[name="message"]').value;
+emailInput.addEventListener('input', throttle(function(event) {
+  savedData.email = emailInput.value;
+  localStorage.setItem('feedback-form-state', JSON.stringify(savedData));
 
-  console.log(`Email: ${email}, Message: ${message}`);
+  console.log(savedData.email);
+}, 500));
 
-  localStorage.removeItem('feedback-form-state');
-  document.querySelector('input[name="email"]').value = '';
-  document.querySelector('textarea[name="message"]').value = '';
-}
+messageInput.addEventListener('input', throttle(function(event) {
+  savedData.message = messageInput.value;
+  localStorage.setItem("feedback-form-state", JSON.stringify(savedData));
 
+  console.log(savedData.message);
+}, 500));
 
-document.querySelectorAll('input, textarea').forEach(element => {
-  element.addEventListener('input', throttle(saveState, 500));
+console.log(savedData);
+
+formSubmit.addEventListener('submit', function(e) {
+    e.preventDefault();
+    console.log(`email: ${savedData.email}, message: ${savedData.message}`);
+
+    clearStorage()
+
 });
-
-document.querySelector('.feedback-form').addEventListener('submit', handleSubmit);
-
-window.addEventListener('load', loadState);
